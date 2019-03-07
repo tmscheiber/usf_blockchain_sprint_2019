@@ -56,7 +56,8 @@ class MedicalRecord:
         return self.data[attr]
 
     def to_dict(self):
-        return OrderedDict({'patient_address': self.patient_address,
+        return OrderedDict({'transaction_type':'medical_record',
+                            'patient_address': self.patient_address,
                             'provider_address': self.provider_address,
                             'provider_employee_address': self.provider_employee_address,
                             'document_ipfs_address': self.document_ipfs_address})
@@ -84,7 +85,7 @@ def make_medical_record():
 
 @app.route('/view/medical/record')
 def view_medical_record():
-    return render_template('./view_transactions.html')
+    return render_template('./view_medical_record.html')
 
 @app.route('/wallet/new', methods=['GET'])
 def new_wallet():

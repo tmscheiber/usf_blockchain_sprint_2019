@@ -247,6 +247,7 @@
               data: $('#medical_record_form').serialize(),
               success: function(response){
 
+                console.log(response);
                 document.getElementById("confirmation_patient_address").value = response["medical_record"]["patient_address"];
                 document.getElementById("confirmation_provider_address").value = response["medical_record"]["provider_address"];
                 document.getElementById("confirmation_provider_employee_address").value = response["medical_record"]["provider_employee_address"];
@@ -278,6 +279,7 @@
               data: $('#confirmation_medical_record_form').serialize(),
               success: function(response){
 
+                console.log(response);
                 //reset both forms
                 $("#medical_record_form")[0].reset();
                 $("#confirmation_medical_record_form")[0].reset();

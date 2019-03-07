@@ -112,23 +112,24 @@
               count = 1;
 
               for (i = 1; i < response.length; i++) { 
-                for (j = 0; j < response["chain"][i]["medical_records"].length; j++) {
+                for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
 
-                  //format date 
-                  var options = {  year: "numeric", month: "short",  day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"  };
-                  var date = new Date(response["chain"][i]["timestamp"] * 1000);
-                  var formattedDateTime = date.toLocaleTimeString("en-us", options);
+                  if (response["chain"][i]["transactions"][j]["transaction_type"]=="medical_record") {
+                    //format date 
+                    var options = {  year: "numeric", month: "short",  day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"  };
+                    var date = new Date(response["chain"][i]["timestamp"] * 1000);
+                    var formattedDateTime = date.toLocaleTimeString("en-us", options);
 
-                  medical_record = [count,
-                                response["chain"][i]["medical_records"][j]["patient_address"],
-                                response["chain"][i]["medical_records"][j]["provider_address"],
-                                response["chain"][i]["medical_records"][j]["provider_employee_address"],
-                                response["chain"][i]["medical_records"][j]["document_ipfs_address"],
-                                formattedDateTime,
-                                response["chain"][i]["block_number"]];
-                  medical_records.push(medical_record);
+                    medical_record = [count,
+                                  response["chain"][i]["transactions"][j]["provider_address"],
+                                  response["chain"][i]["transactions"][j]["provider_employee_address"],
+                                  response["chain"][i]["transactions"][j]["document_ipfs_address"],
+                                  formattedDateTime,
+                                  response["chain"][i]["block_number"]];
+                    medical_records.push(medical_record);
 
-                  count += 1;
+                    count += 1;
+                  };
                 };
               };
 

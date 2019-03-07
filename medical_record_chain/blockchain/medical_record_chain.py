@@ -72,14 +72,51 @@ class Blockchain:
             raise ValueError('Invalid URL')
 
 
-    def verify_transaction_signature(self, patient_address, provider_address, provider_employee_address, signature, transaction):
+    def verify_reward_signature(self, sender_address, signature, reward):
         """
         Check that the provided signature corresponds to transaction
         signed by the public key (sender_address)
         """
-        public_key = RSA.importKey(binascii.unhexlify(provider_address))
+        public_key = RSA.importKey(binascii.unhexlify(sender_address))
         verifier = PKCS1_v1_5.new(public_key)
-        h = SHA.new(str(transaction).encode('utf8'))
+        h = SHA.new(str(reward).encode('utf8'))
+        return verifier.verify(h, binascii.unhexlify(signature))
+
+
+    def submit_reward(self, sender_address, recipient_address, value, signature):
+        """
+        Add a transaction to transactions array if the signature verified
+        """
+        reward = OrderedDict({'transaction_type':'reward',
+                              'sender_address': sender_address, 
+                              'recipient_address': recipient_address,
+                              'value': value})
+
+        #Reward for mining a block
+        if sender_address == MINING_SENDER:
+            self.transactions.append(reward)
+            return len(self.chain) + 1
+        #Manages transactions from wallet to another wallet
+        else:
+            transaction_verification = self.verify_transaction_signature(sender_address, signature, reward)
+            if transaction_verification:
+                self.transactions.append(reward)
+                return len(self.chain) + 1
+            else:
+                return False
+
+
+    def verify_medical_record_signature(self, patient_address, provider_address, provider_employee_address, signature, medical_record):
+        """
+        Check that the provided signature corresponds to transaction
+        signed by the public key (sender_address)
+        """
+        print('provider address: {}'.format(provider_address))
+        public_key = RSA.importKey(binascii.unhexlify(provider_address))
+        print('public key {}'.format(public_key))
+        verifier = PKCS1_v1_5.new(public_key)
+        h = SHA.new(str(medical_record).encode('utf8'))
+        print(h)
         return verifier.verify(h, binascii.unhexlify(signature))
 
 
@@ -87,23 +124,22 @@ class Blockchain:
         """
         Add a medical record transaction if the signature verified
         """
-        transaction = OrderedDict({'patient_address': patient_address, 
-                                    'provider_address': provider_address,
-                                    'provider_employee_address': provider_employee_address,
-                                    'document_ipfs_address': document_ipfs_address})
-
-        #Reward for mining a block
-        if provider_address == MINING_SENDER:
-            self.transactions.append(transaction)
+        medical_record = OrderedDict({'transaction_type':'medical_record',
+                                      'patient_address': patient_address,
+                                      'provider_address': provider_address,
+                                      'provider_employee_address': provider_employee_address,
+                                      'document_ipfs_address': document_ipfs_address})
+        print(medical_record)
+        medical_record_verification = self.verify_medical_record_signature(patient_address
+                                                                           , provider_address
+                                                                           , provider_employee_address
+                                                                           , signature
+                                                                           , medical_record)
+        if medical_record_verification:
+            self.transactions.append(medical_record)
             return len(self.chain) + 1
-        #Manages transactions from wallet to another wallet
         else:
-            transaction_verification = self.verify_transaction_signature(patient_address, provider_address, provider_employee_address, signature, transaction)
-            if transaction_verification:
-                self.transactions.append(transaction)
-                return len(self.chain) + 1
-            else:
-                return False
+            return False
 
 
     def create_block(self, nonce, previous_hash):
@@ -264,6 +300,7 @@ def get_transactions():
     transactions = blockchain.transactions
 
     response = {'transactions': transactions}
+    print(jsonify(response))
     return jsonify(response), 200
 
 @app.route('/chain', methods=['GET'])
@@ -281,7 +318,7 @@ def mine():
     nonce = blockchain.proof_of_work()
 
     # We must receive a reward for finding the proof.
-    blockchain.submit_transaction(sender_address=MINING_SENDER, recipient_address=blockchain.node_id, value=MINING_REWARD, signature="")
+    blockchain.submit_reward(sender_address=MINING_SENDER, recipient_address=blockchain.node_id, value=MINING_REWARD, signature="")
 
     # Forge the new Block by adding it to the chain
     previous_hash = blockchain.hash(last_block)

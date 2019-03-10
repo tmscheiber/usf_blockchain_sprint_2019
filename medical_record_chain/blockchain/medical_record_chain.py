@@ -5,9 +5,9 @@ author          : Adil Moujahid
 date_created    : 20180212
 date_modified   : 20180309
 version         : 0.5
-usage           : python blockchain.py
-                  python blockchain.py -p 5000
-                  python blockchain.py --port 5000
+usage           : python medical_record_chain.py
+                  python medical_record_chain.py -p 5000
+                  python medical_record_chain.py --port 5000
 python_version  : 3.6.1
 Comments        : The blockchain implementation is mostly based on [1]. 
                   I made a few modifications to the original code in order to add RSA encryption to the transactions 
@@ -386,7 +386,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     port = args.port
 
-    app.run(host='127.0.0.1', port=port)
+    app.run(host='0.0.0.0', port=port)
 
 
 

@@ -1,0 +1,85 @@
+version: '3.1'
+services:
+    db:
+        image: postgres:latest
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: quincy
+            POSTGRES_PASSWORD: Quincy1000
+            POSTGRES_DB: quincy
+
+        volumes:
+            - postgres-vol:/var/lib/postgresql
+ 
+    pgadmin:
+        image: dpage/pgadmin4
+        restart: always
+        depends_on:
+            - db
+        ports:
+            - 9080:9080
+        environment:
+            PGADMIN_DEFAULT_EMAIL: quincy@quincy.com
+            PGADMIN_DEFAULT_PASSWORD: Quincy1000
+
+#    api:
+#        build:
+#            dockerfile: ./quincy/Dockerfile
+#            context: ./
+#        image: quincy-api
+#        restart: always
+#        volumes:
+#            - ./backend:/backend
+#        depends_on:
+#            - db
+#        ports:
+#            - 8000:8000
+#        command: 
+#            /bin/bash -c "source activate quincy && python /backend/src/app.py"
+#
+#    frontend:
+#        build:
+#            dockerfile: ./docker/node/Dockerfile
+#            context: ./
+#        image: quincy-frontend
+#        restart: always
+#        volumes:
+#            - ./frontend/public:/app/public
+#            - ./frontend/src:/app/src
+#        depends_on:
+#            - api
+#        ports:
+#            - 9080:9080
+#        command:
+#            yarn serve
+#
+    mrc:
+        image: mrc
+        build:
+            context: ./blockchain
+            dockerfile: ./Dockerfile
+        ports:
+            - "5000:5000"
+
+    mrcc:
+        image: mrcc
+        build:
+            context: ./blockchain_client
+            dockerfile: ./Dockerfile
+        depends_on:
+            - mrc
+        expose:
+            - 8080
+
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf:ro
+        depends_on:
+            - mrcc
+        ports:
+            - "8080:8080"
+   
+volumes:
+    postgres-vol:

@@ -19,7 +19,7 @@ from collections import OrderedDict
 
 import binascii
 
-import Crypto
+#import Crypto
 import Crypto.Random
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA

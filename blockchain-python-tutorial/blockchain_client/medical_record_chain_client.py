@@ -24,10 +24,9 @@ References      : [1] https://github.com/julienr/ipynb_playground/blob/master/bi
 
 from collections import OrderedDict
 
-import binascii
+from binascii import hexlify
 
-import Crypto
-import Crypto.Random
+from Crypto.Cipher import AES
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
@@ -65,6 +64,7 @@ class MedicalRecord:
         """
         Sign transaction with private key
         """
+        
         private_key = RSA.importKey(binascii.unhexlify(self.provider_private_key))
         signer = PKCS1_v1_5.new(private_key)
         h = SHA.new(str(self.to_dict()).encode('utf8'))

@@ -24,16 +24,19 @@ References      : [1] https://github.com/julienr/ipynb_playground/blob/master/bi
 
 from collections import OrderedDict
 
-import binascii
+from binascii import hexlify
+from binascii import unhexlify
 
-import Crypto
-import Crypto.Random
+from Crypto.Cipher import AES
+from Crypto import Random
+from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
 import requests
 from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
 
 
 class MedicalRecord:
@@ -66,14 +69,15 @@ class MedicalRecord:
         """
         Sign transaction with private key
         """
-        private_key = RSA.importKey(binascii.unhexlify(self.provider_private_key))
+        private_key = RSA.importKey(unhexlify(self.provider_private_key))
         signer = PKCS1_v1_5.new(private_key)
         h = SHA.new(str(self.to_dict()).encode('utf8'))
-        return binascii.hexlify(signer.sign(h)).decode('ascii')
+        return hexlify(signer.sign(h)).decode('ascii')
 
 
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def index():
@@ -89,12 +93,12 @@ def view_medical_record():
 
 @app.route('/wallet/new', methods=['GET'])
 def new_wallet():
-	random_gen = Crypto.Random.new().read
+	random_gen = Random.new().read
 	private_key = RSA.generate(1024, random_gen)
 	public_key = private_key.publickey()
 	response = {
-		'private_key': binascii.hexlify(private_key.exportKey(format='DER')).decode('ascii'),
-		'public_key': binascii.hexlify(public_key.exportKey(format='DER')).decode('ascii')
+		'private_key': hexlify(private_key.exportKey(format='DER')).decode('ascii'),
+		'public_key': hexlify(public_key.exportKey(format='DER')).decode('ascii')
 	}
 
 	return jsonify(response), 200
@@ -102,17 +106,11 @@ def new_wallet():
 @app.route('/generate/medical/record', methods=['POST'])
 def generate_medical_record():
 	patient_address = request.form['patient_address']
-	print('patient_address: '+patient_address)
 	provider_address = request.form['provider_address']
-	print('provider_address: '+provider_address)
 	provider_private_key = request.form['provider_private_key']
-	print('provider_private_key: '+provider_private_key)
 	provider_employee_address = request.form['provider_employee_address']
-	print('provider_employee_address: '+provider_employee_address)
 	provider_employee_private_key = request.form['provider_employee_private_key']
-	print('provider_employee_private_key: '+provider_employee_private_key)
 	document_ipfs_address = request.form['document_ipfs_address']
-	print('document_ipfs_address: '+document_ipfs_address)
 
 	medical_record = MedicalRecord(patient_address
                                 , provider_address

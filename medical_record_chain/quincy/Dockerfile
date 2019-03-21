@@ -9,11 +9,11 @@ RUN apk add --update gcc
 RUN pip3 install --upgrade pip
 
 # ensure required python modules are installed
-COPY requirements.txt ./
+COPY ./quincy/requirements.txt ./
 RUN pip3 install --no-cache-dir -r ./requirements.txt
 
 # copy in blockchain app
-COPY ./quincy.py ./
+COPY ./quincy/quincy.py ./
 
 EXPOSE 8000
 CMD ["python3", "./quincy.py", "-p 8000"]

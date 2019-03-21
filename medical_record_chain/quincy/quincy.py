@@ -1,6 +1,6 @@
 from sanic import Sanic
 import socketio
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import sessionmaker
 from models import engine
 from models import QSpace
 import os

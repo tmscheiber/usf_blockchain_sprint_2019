@@ -1,0 +1,46 @@
+openapi: 3.0.0
+servers:
+  - description: Medical Record Chain client app server
+    url: 'http://localhost:8080'
+info:
+  description: This is the API for client apps for the medical record chain
+  version: 1.0.0
+  title: Medical Record Client API
+  contact:
+    email: you@your-company.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: patient
+    description: Patients who own the medical records
+  - name: patient_proxy
+    description: People that patients have granted access to read their medical records
+  - name: provider
+    description: Organization that provides medical care
+  - name: provider_employee
+    description: Person who has permission to act on behalf of a medical provider
+paths:
+  /wallet/new:
+    get:
+      summary: Gets new wallet private and public keys
+      responses:
+        '200':
+          description: public and private key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: bad input parameter
+components:
+  schemas:
+    Wallet:
+      properties:
+        private_key:
+          type: string
+        public_key:
+          type: string
+      required:
+        - private_key
+        - public_key

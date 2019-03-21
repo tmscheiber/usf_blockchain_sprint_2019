@@ -1,15 +1,15 @@
 '''
-title           : blockchain.py
-description     : A blockchain implemenation
-author          : Adil Moujahid
-date_created    : 20180212
-date_modified   : 20180309
-version         : 0.5
+title           : medical_record_chain.py
+description     : Blockchain for managing medical records
+author          : TOm Scheiber
+date_created    : 20180301
+date_modified   : 20190314
+version         : 0.1
 usage           : python medical_record_chain.py
                   python medical_record_chain.py -p 5000
                   python medical_record_chain.py --port 5000
 python_version  : 3.6.1
-Comments        : The blockchain implementation is mostly based on [1]. 
+Comments        : Heavily based on Adil Moujahid example which is based on [1]. 
                   I made a few modifications to the original code in order to add RSA encryption to the transactions 
                   based on [2], changed the proof of work algorithm, and added some Flask routes to interact with the 
                   blockchain from the dashboards
@@ -111,15 +111,24 @@ class Blockchain:
         Check that the provided signature corresponds to transaction
         signed by the public key (sender_address)
         """
-        print('provider address: {}'.format(provider_address))
         public_key = RSA.importKey(binascii.unhexlify(provider_address))
-        print('public key {}'.format(public_key))
         verifier = PKCS1_v1_5.new(public_key)
         h = SHA.new(str(medical_record).encode('utf8'))
-        print(h)
         return verifier.verify(h, binascii.unhexlify(signature))
 
 
+    def get_patient_proxy_addresses(self, patient_address):
+        """
+        Retrieve a list of current proxies that a patient is permitting to see their medical records
+
+        Parameters:
+            patient_address: hexadecimal representation of the patient public key
+
+        Return:
+            Dictionary of hexadecimal proxy addresses (public keys) and JSON record indicating types of medical records available to this proxy
+        """
+        return OrderedDict()
+    
     def submit_medical_record(self, patient_address, provider_address, provider_employee_address, document_ipfs_address, signature):
         """
         Add a medical record transaction if the signature verified
@@ -270,7 +279,9 @@ def index():
 def configure():
     return render_template('./configure.html')
 
-
+@app.route('/medical/recordx/share', methods=['GET'])
+def share_medical_records():
+    return ""
 
 @app.route('/medical/records/new', methods=['POST'])
 def new_transaction():

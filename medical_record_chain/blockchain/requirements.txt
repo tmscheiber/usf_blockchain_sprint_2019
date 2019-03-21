@@ -1,5 +1,8 @@
 Flask
 Flask-Cors
-blockchain
+flask-sqlalchemy
+flask-migrate
+flask-API
+psycopg2
 pycryptodome
 requests

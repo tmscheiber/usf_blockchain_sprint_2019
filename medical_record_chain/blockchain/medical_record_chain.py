@@ -278,14 +278,21 @@ def share_medical_records():
 def new_transaction():
     values = request.form
 
+    print(values)
+    print(values)
+    print(values)
+    print(values)
+    print(values)
+    print(values)
+    print(values)
+    print(values)
     # Check that the required fields are in the POST'ed data
-    required = ['patient_address', 'provider_address', 'provider_public_key', 'document_reference', 'signature']
+    required = ['patient_address', 'provider_address', 'document_reference', 'signature']
     if not all(k in values for k in required):
         return 'Missing values', 400
     # Create a new Transaction
     transaction_result = blockchain.submit_medical_record(values['patient_address'],
                                                           values['provider_address'],
-                                                          values['provider_public_key'],
                                                           values['document_reference'],
                                                           values['signature'])
     print("after submit")

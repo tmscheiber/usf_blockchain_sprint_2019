@@ -164,21 +164,14 @@
                 <div class="row">
                   <label class="col-sm-12">Provider Employee Address:</label>
                   <div class="col-sm-12">
-                    <input type="text" name="provider_employee_address" id="confirmation_provider_employee_address" rows="2" class="form-control" readonly>
-                  </div>
-                </div>
-
-                <div class="row">
-                  <label class="col-sm-12">Document IPFS Address:</label>
-                  <div class="col-sm-12">
-                    <input type="text" name="document_ipfs_address" id="confirmation_document_ipfs_address" rows="2" class="form-control" readonly>
+                    <input type="text" name="document_reference" id="confirmation_document_reference" rows="2" class="form-control" readonly>
                   </div>
                 </div>
 
                 <div class="row">
                   <label class="col-sm-12">Medical Record Signature:</label>
                   <div class="col-sm-12">
-                    <input type="text" name="signature" id="signature" rows="2" class="form-control" readonly>
+                    <input type="text" name="signature" id="confirmation_signature" rows="2" class="form-control" readonly>
                   </div>
                 </div>
 
@@ -251,9 +244,8 @@
                 console.log(response);
                 document.getElementById("confirmation_patient_address").value = response["medical_record"]["patient_address"];
                 document.getElementById("confirmation_provider_address").value = response["medical_record"]["provider_address"];
-                document.getElementById("confirmation_provider_employee_address").value = response["medical_record"]["provider_employee_address"];
-                document.getElementById("confirmation_document_ipfs_address").value = response["medical_record"]["document_ipfs_address"];
-                document.getElementById("signature").value = response["signature"];
+                document.getElementById("confirmation_document_reference").value = response["medical_record"]["document_reference"];
+                document.getElementById("confirmation_signature").value = response["signature"];
 
                 $("#basicModal").modal('show');
                 

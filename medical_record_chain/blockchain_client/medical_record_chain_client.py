@@ -66,9 +66,9 @@ def encrypt_document_path(document_ipfs_address,
     """
     key_doc = document_key+document_ipfs_address
     key_doc_enc_1 = encrypt_document_path_step(key_doc.encode('utf-8'), provider_private_key)
-    key_doc_enc_2 = encrypt_document_path_step(str(key_doc_enc_1).encode('utf-8'), patient_public_key)
+    key_doc_enc_2 = encrypt_document_path_step(key_doc_enc_1, patient_public_key)
 
-    return str(key_doc_enc_2).encode('utf-8')
+    return str(hexlify(key_doc_enc_2))
 
 
 

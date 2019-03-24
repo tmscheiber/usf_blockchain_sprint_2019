@@ -10,7 +10,7 @@ services:
             POSTGRES_PASSWORD: Quincy1000
             POSTGRES_DB: medical_record_db
         volumes:
-            - ./postgres-vol:/var/lib/postgresql/data
+            - ./blockchain/postgres-vol:/var/lib/postgresql/data
         networks:
             - default
  

@@ -23,7 +23,7 @@ import binascii
 
 import Crypto
 import Crypto.Random
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA3_256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
@@ -79,7 +79,7 @@ class Blockchain:
         """
         public_key = RSA.importKey(binascii.unhexlify(sender_address))
         verifier = PKCS1_v1_5.new(public_key)
-        h = SHA.new(str(reward).encode('utf8'))
+        h = SHA3_256.new(str(reward).encode('utf8'))
         return verifier.verify(h, binascii.unhexlify(signature))
 
 
@@ -106,44 +106,35 @@ class Blockchain:
                 return False
 
 
-    def verify_medical_record_signature(self, patient_address, provider_address, provider_employee_address, signature, medical_record):
+    def verify_medical_record_signature(self, provider_public_key, signature, medical_record):
         """
         Check that the provided signature corresponds to transaction
         signed by the public key (sender_address)
         """
-        public_key = RSA.importKey(binascii.unhexlify(provider_address))
+        public_key = RSA.importKey(binascii.unhexlify(provider_public_key))
         verifier = PKCS1_v1_5.new(public_key)
-        h = SHA.new(str(medical_record).encode('utf8'))
+        h = SHA3_256.new(str(medical_record).encode('utf8'))
         return verifier.verify(h, binascii.unhexlify(signature))
 
 
-    def get_patient_proxy_addresses(self, patient_address):
-        """
-        Retrieve a list of current proxies that a patient is permitting to see their medical records
-
-        Parameters:
-            patient_address: hexadecimal representation of the patient public key
-
-        Return:
-            Dictionary of hexadecimal proxy addresses (public keys) and JSON record indicating types of medical records available to this proxy
-        """
-        return OrderedDict()
-    
-    def submit_medical_record(self, patient_address, provider_address, provider_employee_address, document_ipfs_address, signature):
+    def submit_medical_record(self,
+                              patient_address,
+                              provider_address,
+                              provider_public_key,
+                              document_reference,
+                              signature):
         """
         Add a medical record transaction if the signature verified
         """
         medical_record = OrderedDict({'transaction_type':'medical_record',
                                       'patient_address': patient_address,
                                       'provider_address': provider_address,
-                                      'provider_employee_address': provider_employee_address,
-                                      'document_ipfs_address': document_ipfs_address})
+                                      'provider_public_key': provider_public_key,
+                                      'document_reference': document_reference})
         print(medical_record)
-        medical_record_verification = self.verify_medical_record_signature(patient_address
-                                                                           , provider_address
-                                                                           , provider_employee_address
-                                                                           , signature
-                                                                           , medical_record)
+        medical_record_verification = self.verify_medical_record_signature(provider_public_key,
+                                                                           signature,
+                                                                           medical_record)
         if medical_record_verification:
             self.transactions.append(medical_record)
             return len(self.chain) + 1
@@ -170,7 +161,7 @@ class Blockchain:
 
     def hash(self, block):
         """
-        Create a SHA-256 hash of a block
+        Create a SHA3-256 hash of a block
         """
         # We must make sure that the Dictionary is Ordered, or we'll have inconsistent hashes
         block_string = json.dumps(block, sort_keys=True).encode()
@@ -288,14 +279,14 @@ def new_transaction():
     values = request.form
 
     # Check that the required fields are in the POST'ed data
-    required = ['patient_address', 'provider_address', 'provider_employee_address', 'document_ipfs_address', 'signature']
+    required = ['patient_address', 'provider_address', 'provider_public_key', 'document_reference', 'signature']
     if not all(k in values for k in required):
         return 'Missing values', 400
     # Create a new Transaction
     transaction_result = blockchain.submit_medical_record(values['patient_address'],
                                                           values['provider_address'],
-                                                          values['provider_employee_address'],
-                                                          values['document_ipfs_address'],
+                                                          values['provider_public_key'],
+                                                          values['document_reference'],
                                                           values['signature'])
     print("after submit")
     if transaction_result == False:

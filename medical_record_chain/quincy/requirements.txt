@@ -1,6 +1,0 @@
-sanic
-socketio
-base
-sqlalchemy
-pymodels
-os

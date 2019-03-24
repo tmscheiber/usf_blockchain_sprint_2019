@@ -1,46 +1,145 @@
 openapi: 3.0.0
-servers:
-  - description: Medical Record Chain client app server
-    url: 'http://localhost:8080'
 info:
-  description: This is the API for client apps for the medical record chain
-  version: 1.0.0
-  title: Medical Record Client API
-  contact:
-    email: you@your-company.com
-  license:
-    name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-tags:
-  - name: patient
-    description: Patients who own the medical records
-  - name: patient_proxy
-    description: People that patients have granted access to read their medical records
-  - name: provider
-    description: Organization that provides medical care
-  - name: provider_employee
-    description: Person who has permission to act on behalf of a medical provider
+  title: Medical Record Chain
+  version: '0.1'
+servers:
+  - url: 'http://localhost:8080'
+    variables: {}
+    description: local client app
+consumes:
+  - application/json
+produces:
+  - application/json
 paths:
   /wallet/new:
     get:
-      summary: Gets new wallet private and public keys
+      description: Returns all pets from the system that the user has access to
+      operationId: create new
       responses:
         '200':
-          description: public and private key
+          description: wallet response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Wallet'
-        '400':
-          description: bad input parameter
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /generate/medical/record:
+    post:
+      description: creates a signs the data about a medical record
+      operationId: Generate medical record
+      parameters:
+        - name: patient_address
+          in: path
+          description: 'wallet address for patient'
+          required: true
+          schema:
+            type: string
+            default: 'e1dfd66be361a14115f80ae674a1c63a2d5108dbae94062a9dc2c722150a529e'
+        - name: patient_public_key
+          in: path
+          description: 'patient public key for encrypting data'
+          required: true
+          schema:
+            type: string
+            default: '30819f300d06092a864886f70d010101050003818d0030818902818100ae24d682432be1e7a7de5819be446d13a297192350ba116f5d633d2f6d820df873acd62742adcd399a3bd03c5a29f0eb6206dabbce57c2592f37c0bd8caa0b49598bb839d8631dd98754318f4d8db7d26a6493b75f8bd493c14df0b66ad3564d1605a1d54c2b26eab3516b6c5f59a7ff0bda8dc459ea2d0eb6ca9fd85b7000dd0203010001'
+        - name: provider_address
+          in: path
+          required: true
+          schema:
+            type: string
+            default: 'e1dfd66be361a14115f80ae674a1c63a2d5108dbae94062a9dc2c722150a529e'
+        - name: provider_private_key
+          in: path
+          description: 'provider key used to sign record and encrypt data'
+          required: true
+          schema:
+            type: string
+            default: '3082025b02010002818100ae24d682432be1e7a7de5819be446d13a297192350ba116f5d633d2f6d820df873acd62742adcd399a3bd03c5a29f0eb6206dabbce57c2592f37c0bd8caa0b49598bb839d8631dd98754318f4d8db7d26a6493b75f8bd493c14df0b66ad3564d1605a1d54c2b26eab3516b6c5f59a7ff0bda8dc459ea2d0eb6ca9fd85b7000dd020301000102818021ae5f4cbf7827cfb9d08fc29ee1b625138fdcdd4f3a45afffe4774b8a871a73a0cfdf75a5785f1692859a0f6a32ed756136c92c84cac57ca15ccbaafd9f4fe234b31ff589ff6ccf02cafc3db7c59f75303abcd4dd4f18a4b1d1981e9547436989793ab7563a945158b821e9f05be6bdd03f21174f42f4799fb26e09dc6a76f1024100cb447f4c18cedae94d4787e724db818e78df0522f9c7bd8afe2bedf583da47c6c27bc1befaf60ac70b6b7134226cbe253e9c745ce181e9f86b05eed65b2d3495024100db522a67768cae7eeec9998937bee69ab6b378eabc06990afea55c0c6b36519c7959dd543b03653b50b35cc977106ab322c927af2e47eed0db6cae41568601290240392bd5e61060360042a528db61697fe213ab1ea5bcbd6a596aadee6b0c9fdb6a530f3dea3a69f394126930d8ea09cddd69e3d572be56acf91b18fb193d61d495024011449ee2168b6d11c16b4e1367b8381fe652ab2a903354c970d34434161ce8c0112dea273f9e3cd236c06885d4420ea49c108a77588581602066a631aec64e410240088a17beacb6758a86543479635b0d8467df8b4d7432a5d1fa24257a82db42eb75465d020605cf37dfddb1b38d018e96b98a347f1ba5978f182c725f8f0d9045'
+        - name: document_key
+          in: path
+          description: 'key that can be used to decrypt medical record'
+          required: true
+          schema:
+            type: string
+            default: '30819f300d06092a864886f70d010101050003818d0030818902818100ae24d682432be1e7a7de5819be446d13a297192350ba116f5d633d2f6d820df873acd62742adcd399a3bd03c5a29f0eb6206dabbce57c2592f37c0bd8caa0b49598bb839d8631dd98754318f4d8db7d26a6493b75f8bd493c14df0b66ad3564d1605a1d54c2b26eab3516b6c5f59a7ff0bda8dc459ea2d0eb6ca9fd85b7000dd0203010001'
+        - name: document_ipfs_address
+          in: path
+          description: 'hash of document location in IPFS'
+          required: true
+          schema:
+            type: string
+            default: 'e1dfd66be361a14115f80ae674a1c63a2d5108dbae94062a9dc2c722150a529e'
+      responses:
+        '200':
+          description: pet response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedMedicalRecord'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
 components:
   schemas:
     Wallet:
+      type: object
+      required:
+        - private_key
+        - public_key
+        - wallet_address
       properties:
         private_key:
           type: string
         public_key:
           type: string
+        wallet_address:
+          type: string
+    SignedMedicalRecord:
+      type: object
       required:
-        - private_key
-        - public_key
+        - transaction_type
+        - patient_address
+        - provider_address
+        - provider_public_key
+        - document_reference
+      properties:
+        medical_record:
+          type: array
+          items:
+            type: object
+            properties:
+              transaction_type:
+                type: string
+                description: 'indicates that this is a medical record transaction'
+              patient_address:
+                type: string
+                description: 'wallet address for patient'
+              provider_address:
+                type: string
+                description: 'wallet address for provider'
+              provider_public_key:
+                type: string
+                description: 'public key used to verify signature' 
+              document_reference:
+                type: string
+        signature:
+          type: string
+    ErrorModel:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string

@@ -135,3 +135,9 @@ dmypy.json
 
 # postgress data directories
 postgres-vol
+
+# don't save quincy
+quincy
+
+# ignore mac management files
+.DS_Store

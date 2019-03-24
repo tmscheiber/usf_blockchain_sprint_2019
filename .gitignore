@@ -143,4 +143,4 @@ quincy
 .DS_Store
 
 # ignore migrations file. Everyone has to populate their own DB
-# 
+migrations

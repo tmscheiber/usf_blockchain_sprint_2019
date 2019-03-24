@@ -141,3 +141,6 @@ quincy
 
 # ignore mac management files
 .DS_Store
+
+# ignore migrations file. Everyone has to populate their own DB
+# 

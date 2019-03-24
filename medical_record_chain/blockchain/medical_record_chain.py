@@ -98,7 +98,7 @@ class Blockchain:
             return len(self.chain) + 1
         #Manages transactions from wallet to another wallet
         else:
-            transaction_verification = self.verify_transaction_signature(sender_address, signature, reward)
+            transaction_verification = self.verify_reward_signature(sender_address, signature, reward)
             if transaction_verification:
                 self.transactions.append(reward)
                 return len(self.chain) + 1
@@ -114,6 +114,7 @@ class Blockchain:
         public_key = RSA.importKey(binascii.unhexlify(provider_public_key))
         verifier = PKCS1_v1_5.new(public_key)
         h = SHA3_256.new(str(medical_record).encode('utf8'))
+
         return verifier.verify(h, binascii.unhexlify(signature))
 
 
@@ -131,7 +132,7 @@ class Blockchain:
                                       'provider_address': provider_address,
                                       'provider_public_key': provider_public_key,
                                       'document_reference': document_reference})
-        print(medical_record)
+
         medical_record_verification = self.verify_medical_record_signature(provider_public_key,
                                                                            signature,
                                                                            medical_record)
@@ -278,14 +279,6 @@ def share_medical_records():
 def new_transaction():
     values = request.form
 
-    print(values)
-    print(values)
-    print(values)
-    print(values)
-    print(values)
-    print(values)
-    print(values)
-    print(values)
     # Check that the required fields are in the POST'ed data
     required = ['patient_address', 'provider_address', 'document_reference', 'signature']
     if not all(k in values for k in required):
@@ -293,9 +286,10 @@ def new_transaction():
     # Create a new Transaction
     transaction_result = blockchain.submit_medical_record(values['patient_address'],
                                                           values['provider_address'],
+                                                          values['provider_public_key'],
                                                           values['document_reference'],
                                                           values['signature'])
-    print("after submit")
+
     if transaction_result == False:
         response = {'message': 'Invalid Transaction!'}
         return jsonify(response), 406

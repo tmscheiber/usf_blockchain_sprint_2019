@@ -79,12 +79,14 @@ class MedicalRecord:
                  patient_public_key,
                  provider_address,
                  provider_private_key,
+                 provider_public_key,
                  document_key,
                  document_ipfs_address):
         self.patient_address = patient_address
         self.patient_public_key = patient_public_key
         self.provider_address = provider_address
         self.provider_private_key = provider_private_key
+        self.provider_public_key = provider_public_key
         self.document_key = document_key
         self.document_ipfs_address = document_ipfs_address
 
@@ -100,6 +102,7 @@ class MedicalRecord:
         return OrderedDict({'transaction_type':'medical_record',
                             'patient_address': self.patient_address,
                             'provider_address': self.provider_address,
+                            'provider_public_key': self.provider_public_key,
                             'document_reference': self.document_reference})
 
     def sign_medical_record_creation(self):
@@ -109,6 +112,7 @@ class MedicalRecord:
         private_key = RSA.importKey(unhexlify(self.provider_private_key))
         signer = PKCS1_v1_5.new(private_key)
         h = SHA3_256.new(str(self.to_dict()).encode('utf8'))
+
         return hexlify(signer.sign(h)).decode('ascii')
 
 app = Flask(__name__)
@@ -147,6 +151,7 @@ def generate_medical_record():
     patient_public_key = request.form['patient_public_key']
     provider_address = request.form['provider_address']
     provider_private_key = request.form['provider_private_key']
+    provider_public_key = request.form['provider_public_key']
     document_key = request.form['document_key']
     document_ipfs_address = request.form['document_ipfs_address']
 
@@ -154,6 +159,7 @@ def generate_medical_record():
                                    patient_public_key,
                                    provider_address,
                                    provider_private_key,
+                                   provider_public_key,
                                    document_key,
                                    document_ipfs_address
                                  )

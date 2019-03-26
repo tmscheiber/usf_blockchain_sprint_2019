@@ -18,7 +18,7 @@ References      : [1] https://github.com/dvf/blockchain/blob/master/blockchain.p
 '''
 
 from collections import OrderedDict
-
+import os
 import binascii
 
 import Crypto
@@ -37,7 +37,8 @@ import requests
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
-
+from app import db, create_app
+from app import models
 
 MINING_SENDER = "THE BLOCKCHAIN"
 MINING_REWARD = 1
@@ -53,7 +54,11 @@ class Blockchain:
         self.nodes = set()
         #Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
-        #Create genesis block
+        # # if not already done, create genesis block
+        # # otherwise load last block
+        # if 0 == models.Block.get_block_count():
+        # else:
+        #     self.chain = models.Block.get_all_blocks()
         self.create_block(0, '00')
 
 
@@ -153,10 +158,15 @@ class Blockchain:
                 'nonce': nonce,
                 'previous_hash': previous_hash}
 
+        # # save block to DB
+        # models.Block(len(self.chain) + 1, nonce, previous_hash, self.transactions).save()
+
+        # append to blocks in memory
+        self.chain.append(block)
+
         # Reset the current list of transactions
         self.transactions = []
 
-        self.chain.append(block)
         return block
 
 
@@ -257,7 +267,9 @@ class Blockchain:
         return False
 
 # Instantiate the Node
-app = Flask(__name__)
+app = create_app(config_name=os.getenv('APP_SETTINGS'))
+app.app_context().push()
+#app = Flask(__name__)
 CORS(app)
 
 # Instantiate the Blockchain

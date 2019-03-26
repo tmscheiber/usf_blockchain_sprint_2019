@@ -1,6 +1,12 @@
 FROM alpine:3.9.2
 
-# update
+# set a few environment variables
+ENV FLASK_APP="medical_record_chain.py"
+ENV APP_SETTINGS="development"
+ENV SECRET="dev_secret"
+ENV DATABASE_URL="postgresql://quincy:Quincy1000@host.docker.internal:5432/medical_record_db"
+
+# update python and c++ compiler
 RUN apk add --update python3 py3-pip
 RUN apk add --update gcc
 
@@ -29,7 +35,10 @@ RUN \
 COPY ./medical_record_chain.py /usr/src/app/
 COPY ./templates /usr/src/app/templates
 COPY ./static /usr/src/app/static
+COPY ./app /usr/src/app/app
+COPY ./instance /usr/src/app/instance
 
 WORKDIR /usr/src/app
 EXPOSE 5000
+#CMD ["flask", "./medical_record_chain.py", "-p 5000"]
 CMD ["python3", "./medical_record_chain.py", "-p 5000"]

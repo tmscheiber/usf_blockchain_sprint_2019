@@ -22,53 +22,18 @@ services:
         networks:
             - default
 
-    # pgadmin:
-    #     image: dpage/pgadmin4
-    #     restart: always
-    #     depends_on:
-    #         - db
-    #     ports:
-    #         - 8082:8080
-    #     environment:
-    #         PGADMIN_DEFAULT_EMAIL: quincy@quincy.com
-    #         PGADMIN_DEFAULT_PASSWORD: Quincy1000
-
-#    api:
-#        build:
-#            dockerfile: ./quincy/Dockerfile
-#            context: ./
-#        image: quincy-api
-#        restart: always
-#        volumes:
-#            - ./backend:/backend
-#        depends_on:
-#            - db
-#        ports:
-#            - 8000:8000
-#        command: 
-#            /bin/bash -c "source activate quincy && python /backend/src/app.py"
-#
-#    frontend:
-#        build:
-#            dockerfile: ./docker/node/Dockerfile
-#            context: ./
-#        image: quincy-frontend
-#        restart: always
-#        volumes:
-#            - ./frontend/public:/app/public
-#            - ./frontend/src:/app/src
-#        depends_on:
-#            - api
-#        ports:
-#            - 9080:9080
-#        command:
-#            yarn serve
-#
     mrc:
         image: mrc
         build:
             context: ./blockchain
             dockerfile: ./Dockerfile
+        environment:
+            FLASK_APP: medical_record_chain.py
+            APP_SETTINGS: development
+            SECRET: dev_secret
+            DATABASE_URL: postgresql://quincy:Quincy1000@host.docker.internal:5432/medical_record_db"
+        depends_on:
+            - db
         ports:
             - "5000:5000"
         networks:

@@ -1,8 +1,7 @@
-FROM alpine:3.9.2
+FROM alpine:latest
 
-# update
+# update python and c++ compiler
 RUN apk add --update python3 py3-pip
-RUN apk add --update gcc
 
 # Install dependencies
 # Install app dependencies
@@ -18,14 +17,27 @@ RUN ./build-cryptography.sh
 RUN pip install --no-index --find-links=./ cryptography
 
 # ensure required python modules are installed
-COPY requirements.txt /usr/src/app/
-RUN pip3 install --no-cache-dir -r /usr/src/app/requirements.txt
+COPY requirements.txt .
+RUN \
+ apk add --no-cache postgresql-libs && \
+ apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev && \
+ pip3 install -r requirements.txt --no-cache-dir && \
+ apk --purge del .build-deps
 
 # copy in blockchain app
 COPY ./medical_record_chain.py /usr/src/app/
 COPY ./templates /usr/src/app/templates
 COPY ./static /usr/src/app/static
+COPY ./app /usr/src/app/app
+COPY ./instance /usr/src/app/instance
 
 WORKDIR /usr/src/app
 EXPOSE 5000
+
+## wait until DB starts up
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
+RUN chmod +x /wait
+
+#CMD ["flask", "./medical_record_chain.py", "-p 5000"]
+CMD /wait
 CMD ["python3", "./medical_record_chain.py", "-p 5000"]

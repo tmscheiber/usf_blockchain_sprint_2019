@@ -1,15 +1,15 @@
 '''
-title           : blockchain.py
-description     : A blockchain implemenation
-author          : Adil Moujahid
-date_created    : 20180212
-date_modified   : 20180309
-version         : 0.5
+title           : medical_record_chain.py
+description     : Blockchain for managing medical records
+author          : TOm Scheiber
+date_created    : 20180301
+date_modified   : 20190314
+version         : 0.1
 usage           : python medical_record_chain.py
                   python medical_record_chain.py -p 5000
                   python medical_record_chain.py --port 5000
 python_version  : 3.6.1
-Comments        : The blockchain implementation is mostly based on [1]. 
+Comments        : Heavily based on Adil Moujahid example which is based on [1]. 
                   I made a few modifications to the original code in order to add RSA encryption to the transactions 
                   based on [2], changed the proof of work algorithm, and added some Flask routes to interact with the 
                   blockchain from the dashboards
@@ -17,27 +17,33 @@ References      : [1] https://github.com/dvf/blockchain/blob/master/blockchain.p
                   [2] https://github.com/julienr/ipynb_playground/blob/master/bitcoin/dumbcoin/dumbcoin.ipynb
 '''
 
-from collections import OrderedDict
-
+# from standard python modules
+import os
 import binascii
-
-import Crypto
-import Crypto.Random
-from Crypto.Hash import SHA
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-
-import hashlib
 import json
-from time import time
-from urllib.parse import urlparse
 from uuid import uuid4
+from urllib.parse import urlparse
+from collections import OrderedDict
+from datetime import datetime
+import hashlib
 
-import requests
-from flask import Flask, jsonify, request, render_template
+# import cryptographic and hashing support
+# import Crypto
+# import Crypto.Random
+from Crypto.Hash import SHA3_256
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+
+# import application modules
+from flask import Flask
+from flask import request
+from flask import jsonify
+from flask import render_template
 from flask_cors import CORS
 
-
+# import this applications modules
+from app import db, create_app
+from app import models
 
 MINING_SENDER = "THE BLOCKCHAIN"
 MINING_REWARD = 1
@@ -53,8 +59,13 @@ class Blockchain:
         self.nodes = set()
         #Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
-        #Create genesis block
-        self.create_block(0, '00')
+        # # if not already done, create genesis block
+        # # otherwise load last block
+        if 0 == models.Block.get_block_count():
+            self.create_block(0, '00')
+        else:
+            self.chain = models.Block.get_all_blocks()
+        # self.create_block(0, '00')
 
 
     def register_node(self, node_url):
@@ -78,8 +89,8 @@ class Blockchain:
         signed by the public key (sender_address)
         """
         public_key = RSA.importKey(binascii.unhexlify(sender_address))
-        verifier = PKCS1_v1_5.new(public_key)
-        h = SHA.new(str(reward).encode('utf8'))
+        verifier = pkcs1_15.new(public_key)
+        h = SHA3_256.new(str(reward).encode('utf8'))
         return verifier.verify(h, binascii.unhexlify(signature))
 
 
@@ -98,7 +109,7 @@ class Blockchain:
             return len(self.chain) + 1
         #Manages transactions from wallet to another wallet
         else:
-            transaction_verification = self.verify_transaction_signature(sender_address, signature, reward)
+            transaction_verification = self.verify_reward_signature(sender_address, signature, reward)
             if transaction_verification:
                 self.transactions.append(reward)
                 return len(self.chain) + 1
@@ -106,35 +117,40 @@ class Blockchain:
                 return False
 
 
-    def verify_medical_record_signature(self, patient_address, provider_address, provider_employee_address, signature, medical_record):
+    def verify_medical_record_signature(self, provider_public_key, signature, medical_record):
         """
         Check that the provided signature corresponds to transaction
         signed by the public key (sender_address)
         """
-        print('provider address: {}'.format(provider_address))
-        public_key = RSA.importKey(binascii.unhexlify(provider_address))
-        print('public key {}'.format(public_key))
-        verifier = PKCS1_v1_5.new(public_key)
-        h = SHA.new(str(medical_record).encode('utf8'))
-        print(h)
-        return verifier.verify(h, binascii.unhexlify(signature))
+        isAuthentic = False
+        public_key = RSA.importKey(binascii.unhexlify(provider_public_key))
+        h = SHA3_256.new(str(medical_record).encode('utf8'))
+        verifier = pkcs1_15.new(public_key)
+        try:
+            verifier.verify(h, binascii.unhexlify(signature))
+            isAuthentic = True
+        except ValueError:
+            isAuthentic = False
+        return isAuthentic
 
 
-    def submit_medical_record(self, patient_address, provider_address, provider_employee_address, document_ipfs_address, signature):
+    def submit_medical_record(self,
+                              patient_address,
+                              provider_address,
+                              provider_public_key,
+                              document_reference,
+                              signature):
         """
         Add a medical record transaction if the signature verified
         """
         medical_record = OrderedDict({'transaction_type':'medical_record',
                                       'patient_address': patient_address,
                                       'provider_address': provider_address,
-                                      'provider_employee_address': provider_employee_address,
-                                      'document_ipfs_address': document_ipfs_address})
-        print(medical_record)
-        medical_record_verification = self.verify_medical_record_signature(patient_address
-                                                                           , provider_address
-                                                                           , provider_employee_address
-                                                                           , signature
-                                                                           , medical_record)
+                                      'provider_public_key': provider_public_key,
+                                      'document_reference': document_reference})
+        medical_record_verification = self.verify_medical_record_signature(provider_public_key,
+                                                                           signature,
+                                                                           medical_record)
         if medical_record_verification:
             self.transactions.append(medical_record)
             return len(self.chain) + 1
@@ -147,21 +163,26 @@ class Blockchain:
         Add a block of transactions to the blockchain
         """
         block = {'block_number': len(self.chain) + 1,
-                'timestamp': time(),
+                'timestamp': datetime.now().isoformat(timespec='microseconds'),
                 'transactions': self.transactions,
                 'nonce': nonce,
                 'previous_hash': previous_hash}
 
+        # # save block to DB
+        models.Block(len(self.chain) + 1, nonce, previous_hash, self.transactions).save()
+
+        # append to blocks in memory
+        self.chain.append(block)
+
         # Reset the current list of transactions
         self.transactions = []
 
-        self.chain.append(block)
         return block
 
 
     def hash(self, block):
         """
-        Create a SHA-256 hash of a block
+        Create a SHA3-256 hash of a block
         """
         # We must make sure that the Dictionary is Ordered, or we'll have inconsistent hashes
         block_string = json.dumps(block, sort_keys=True).encode()
@@ -173,8 +194,8 @@ class Blockchain:
         """
         Proof of work algorithm
         """
-        last_block = self.chain[-1]
-        last_hash = self.hash(last_block)
+        last_block = models.Block.get_newest_block()
+        last_hash = self.hash(self.hash(models.convert_block_to_dictionary(last_block)))
 
         nonce = 0
         while self.valid_proof(self.transactions, last_hash, nonce) is False:
@@ -256,7 +277,9 @@ class Blockchain:
         return False
 
 # Instantiate the Node
-app = Flask(__name__)
+app = create_app(config_name=os.getenv('APP_SETTINGS'))
+app.app_context().push()
+#app = Flask(__name__)
 CORS(app)
 
 # Instantiate the Blockchain
@@ -270,23 +293,25 @@ def index():
 def configure():
     return render_template('./configure.html')
 
-
+@app.route('/medical/recordx/share', methods=['GET'])
+def share_medical_records():
+    return ""
 
 @app.route('/medical/records/new', methods=['POST'])
 def new_transaction():
     values = request.form
 
     # Check that the required fields are in the POST'ed data
-    required = ['patient_address', 'provider_address', 'provider_employee_address', 'document_ipfs_address', 'signature']
+    required = ['patient_address', 'provider_address', 'document_reference', 'signature']
     if not all(k in values for k in required):
         return 'Missing values', 400
     # Create a new Transaction
     transaction_result = blockchain.submit_medical_record(values['patient_address'],
                                                           values['provider_address'],
-                                                          values['provider_employee_address'],
-                                                          values['document_ipfs_address'],
+                                                          values['provider_public_key'],
+                                                          values['document_reference'],
                                                           values['signature'])
-    print("after submit")
+
     if transaction_result == False:
         response = {'message': 'Invalid Transaction!'}
         return jsonify(response), 406
@@ -300,7 +325,6 @@ def get_transactions():
     transactions = blockchain.transactions
 
     response = {'transactions': transactions}
-    print(jsonify(response))
     return jsonify(response), 200
 
 @app.route('/chain', methods=['GET'])
@@ -387,11 +411,3 @@ if __name__ == '__main__':
     port = args.port
 
     app.run(host='0.0.0.0', port=port)
-
-
-
-
-
-
-
-

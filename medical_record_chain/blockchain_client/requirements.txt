@@ -1,4 +1,4 @@
 Flask
-cryptos
+flask_cors
 pycryptodome
 requests

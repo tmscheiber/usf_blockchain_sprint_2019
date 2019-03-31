@@ -44,6 +44,7 @@
 
     <!--  -->
     <div class="container">
+
       <div class="row">
         <div class="col-lg-12">
           <div class="card-body">
@@ -163,23 +164,13 @@
                 var date = new Date(response["chain"][i]["timestamp"] * 1000);
                 var formattedDateTime = date.toLocaleTimeString("en-us", options);
 
-                if (response["chain"][i]["transactions"][j]["transaction_type"] == 'medical_record') {
-                  transaction = [count,
-                              response["chain"][i]["transactions"][j]["transaction_type"],
-                              response["chain"][i]["transactions"][j]["patient_address"],
-                              response["chain"][i]["transactions"][j]["provider_address"],
-                              response["chain"][i]["transactions"][j]["document_reference"],
-                              formattedDateTime,
-                              response["chain"][i]["block_number"]];
-                } else if (response["chain"][i]["transactions"][j]["transaction_type"] == 'reward') {
-                  transaction = [count,
+                transaction = [count,
                               response["chain"][i]["transactions"][j]["transaction_type"],
                               response["chain"][i]["transactions"][j]["recipient_address"],
                               response["chain"][i]["transactions"][j]["sender_address"],
                               response["chain"][i]["transactions"][j]["value"],
                               formattedDateTime,
                               response["chain"][i]["block_number"]];
-                }
                 transactions.push(transaction);
 
                 count += 1;
@@ -198,41 +189,59 @@
                           { title: "Block"}],
                 columnDefs: [ {targets: [1,2,3,4,5,6], render: $.fn.dataTable.render.ellipsis( 25 )}]
               } );
+
           },
           error: function(error){
             console.log(error);
           }
         });
 
+
         $("#mine_button").click(function () {
+
           $.ajax({
             url: "/mine",
             type: "GET",
             success: function(response){
-              window.location.reload();              
+
+              window.location.reload();
+              
             },
             error: function(error){
               console.log(error);
             }
           });
+
         });
+
 
         $("#refresh_transactions").click(function () {
+
           window.location.reload();
+
         });
 
+
         $("#refresh_blockchain").click(function () {
+
           $.ajax({
             url: "/nodes/resolve",
             type: "GET",
             success: function(response){
+
               window.location.reload();
+              
             },
             error: function(error){
               console.log(error);
             }
           });
+
         });
+
+
+        
+
       })
 
 

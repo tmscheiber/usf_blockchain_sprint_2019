@@ -74,9 +74,19 @@
         <br>
         
         <div class="row">
+          <label class="col-sm-2">Patient Public Key:</label>
+          <div class="col-sm-10">
+            <input type="text" name="patient_public_key" id="patient_public_key" rows="2" class="form-control">
+          </div>
+        </div>
+
+        <br>
+        
+        <div class="row">
           <label class="col-sm-2">Provider Address:</label>
           <div class="col-sm-10">
             <input type="text" name="provider_address" id="provider_address" rows="2" class="form-control">
+
           </div>
         </div>
 
@@ -92,18 +102,18 @@
         <br>
         
         <div class="row">
-          <label class="col-sm-2">Provider Employee Address:</label>
+          <label class="col-sm-2">Provider Public Key:</label>
           <div class="col-sm-10">
-            <input type="text" name="provider_employee_address" id="provider_employee_address" rows="2" class="form-control">
+            <input type="text" name="provider_public_key" id="provider_public_key" rows="2" class="form-control">
           </div>
         </div>
 
         <br>
         
         <div class="row">
-          <label class="col-sm-2">Provider Employee Private Key:</label>
+          <label class="col-sm-2">Document Decryption Key:</label>
           <div class="col-sm-10">
-            <input type="text" name="provider_employee_private_key" id="provider_employee_private_key" rows="2" class="form-control">
+            <input type="text" name="document_key" id="document_key" rows="2" class="form-control">
           </div>
         </div>
 
@@ -161,23 +171,23 @@
                 </div>
                 
                 <div class="row">
-                  <label class="col-sm-12">Provider Employee Address:</label>
+                  <label class="col-sm-12">Provider Public Key:</label>
                   <div class="col-sm-12">
-                    <input type="text" name="provider_employee_address" id="confirmation_provider_employee_address" rows="2" class="form-control" readonly>
+                    <input type="text" name="provider_public_key" id="confirmation_provider_public_key" rows="2" class="form-control" readonly>
                   </div>
                 </div>
-
+                
                 <div class="row">
-                  <label class="col-sm-12">Document IPFS Address:</label>
+                  <label class="col-sm-12">Provider Employee Address:</label>
                   <div class="col-sm-12">
-                    <input type="text" name="document_ipfs_address" id="confirmation_document_ipfs_address" rows="2" class="form-control" readonly>
+                    <input type="text" name="document_reference" id="confirmation_document_reference" rows="2" class="form-control" readonly>
                   </div>
                 </div>
 
                 <div class="row">
                   <label class="col-sm-12">Medical Record Signature:</label>
                   <div class="col-sm-12">
-                    <input type="text" name="signature" id="signature" rows="2" class="form-control" readonly>
+                    <input type="text" name="signature" id="confirmation_signature" rows="2" class="form-control" readonly>
                   </div>
                 </div>
 
@@ -250,9 +260,9 @@
                 console.log(response);
                 document.getElementById("confirmation_patient_address").value = response["medical_record"]["patient_address"];
                 document.getElementById("confirmation_provider_address").value = response["medical_record"]["provider_address"];
-                document.getElementById("confirmation_provider_employee_address").value = response["medical_record"]["provider_employee_address"];
-                document.getElementById("confirmation_document_ipfs_address").value = response["medical_record"]["document_ipfs_address"];
-                document.getElementById("signature").value = response["signature"];
+                document.getElementById("confirmation_provider_public_key").value = response["medical_record"]["provider_public_key"];
+                document.getElementById("confirmation_document_reference").value = response["medical_record"]["document_reference"];
+                document.getElementById("confirmation_signature").value = response["signature"];
 
                 $("#basicModal").modal('show');
                 
@@ -286,10 +296,10 @@
                 
                 //clean text boxes
                 $("#patient_address").val("");
+                $("#provider_piblic_key").val("");
                 $("#provider_address").val("");
                 $("#provider_private_key").val("");
-                $("#provider_employee_address").val("");
-                $("#provider_employee_private_key").val("");
+                $("#document_key").val("");
                 $("#document_ipfs_address").val("");
 
                 $("#basicModal").modal('hide');

@@ -1,5 +1,0 @@
-sanic
-socketio
-sqlalchemy.orm
-models
-os

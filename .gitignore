@@ -144,3 +144,5 @@ quincy
 
 # ignore migrations file. Everyone has to populate their own DB
 migrations
+.DS_Store
+medical_record_chain/.DS_Store

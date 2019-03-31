@@ -260,7 +260,7 @@
                 console.log(response);
                 document.getElementById("confirmation_patient_address").value = response["medical_record"]["patient_address"];
                 document.getElementById("confirmation_provider_address").value = response["medical_record"]["provider_address"];
-                document.getElementById("confirmation_provider_public_key").value = $("#provider_public_key").val();;
+                document.getElementById("confirmation_provider_public_key").value = response["medical_record"]["provider_public_key"];
                 document.getElementById("confirmation_document_reference").value = response["medical_record"]["document_reference"];
                 document.getElementById("confirmation_signature").value = response["signature"];
 

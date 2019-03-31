@@ -17,26 +17,31 @@ References      : [1] https://github.com/dvf/blockchain/blob/master/blockchain.p
                   [2] https://github.com/julienr/ipynb_playground/blob/master/bitcoin/dumbcoin/dumbcoin.ipynb
 '''
 
-from collections import OrderedDict
+# from standard python modules
 import os
 import binascii
+import json
+from uuid import uuid4
+from urllib.parse import urlparse
+from collections import OrderedDict
+from datetime import datetime
+import hashlib
 
-import Crypto
-import Crypto.Random
+# import cryptographic and hashing support
+# import Crypto
+# import Crypto.Random
 from Crypto.Hash import SHA3_256
 from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from Crypto.Signature import pkcs1_15
 
-import hashlib
-import json
-from time import time
-from urllib.parse import urlparse
-from uuid import uuid4
-
-import requests
-from flask import Flask, jsonify, request, render_template
+# import application modules
+from flask import Flask
+from flask import request
+from flask import jsonify
+from flask import render_template
 from flask_cors import CORS
 
+# import this applications modules
 from app import db, create_app
 from app import models
 
@@ -56,10 +61,11 @@ class Blockchain:
         self.node_id = str(uuid4()).replace('-', '')
         # # if not already done, create genesis block
         # # otherwise load last block
-        # if 0 == models.Block.get_block_count():
-        # else:
-        #     self.chain = models.Block.get_all_blocks()
-        self.create_block(0, '00')
+        if 0 == models.Block.get_block_count():
+            self.create_block(0, '00')
+        else:
+            self.chain = models.Block.get_all_blocks()
+        # self.create_block(0, '00')
 
 
     def register_node(self, node_url):
@@ -83,7 +89,7 @@ class Blockchain:
         signed by the public key (sender_address)
         """
         public_key = RSA.importKey(binascii.unhexlify(sender_address))
-        verifier = PKCS1_v1_5.new(public_key)
+        verifier = pkcs1_15.new(public_key)
         h = SHA3_256.new(str(reward).encode('utf8'))
         return verifier.verify(h, binascii.unhexlify(signature))
 
@@ -116,11 +122,16 @@ class Blockchain:
         Check that the provided signature corresponds to transaction
         signed by the public key (sender_address)
         """
+        isAuthentic = False
         public_key = RSA.importKey(binascii.unhexlify(provider_public_key))
-        verifier = PKCS1_v1_5.new(public_key)
         h = SHA3_256.new(str(medical_record).encode('utf8'))
-
-        return verifier.verify(h, binascii.unhexlify(signature))
+        verifier = pkcs1_15.new(public_key)
+        try:
+            verifier.verify(h, binascii.unhexlify(signature))
+            isAuthentic = True
+        except ValueError:
+            isAuthentic = False
+        return isAuthentic
 
 
     def submit_medical_record(self,
@@ -137,7 +148,6 @@ class Blockchain:
                                       'provider_address': provider_address,
                                       'provider_public_key': provider_public_key,
                                       'document_reference': document_reference})
-
         medical_record_verification = self.verify_medical_record_signature(provider_public_key,
                                                                            signature,
                                                                            medical_record)
@@ -153,13 +163,13 @@ class Blockchain:
         Add a block of transactions to the blockchain
         """
         block = {'block_number': len(self.chain) + 1,
-                'timestamp': time(),
+                'timestamp': datetime.now().isoformat(timespec='microseconds'),
                 'transactions': self.transactions,
                 'nonce': nonce,
                 'previous_hash': previous_hash}
 
         # # save block to DB
-        # models.Block(len(self.chain) + 1, nonce, previous_hash, self.transactions).save()
+        models.Block(len(self.chain) + 1, nonce, previous_hash, self.transactions).save()
 
         # append to blocks in memory
         self.chain.append(block)
@@ -184,8 +194,8 @@ class Blockchain:
         """
         Proof of work algorithm
         """
-        last_block = self.chain[-1]
-        last_hash = self.hash(last_block)
+        last_block = models.Block.get_newest_block()
+        last_hash = self.hash(self.hash(models.convert_block_to_dictionary(last_block)))
 
         nonce = 0
         while self.valid_proof(self.transactions, last_hash, nonce) is False:
@@ -315,7 +325,6 @@ def get_transactions():
     transactions = blockchain.transactions
 
     response = {'transactions': transactions}
-    print(jsonify(response))
     return jsonify(response), 200
 
 @app.route('/chain', methods=['GET'])
@@ -402,11 +411,3 @@ if __name__ == '__main__':
     port = args.port
 
     app.run(host='0.0.0.0', port=port)
-
-
-
-
-
-
-
-

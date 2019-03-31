@@ -1,14 +1,7 @@
-FROM alpine:3.9.2
-
-# set a few environment variables
-ENV FLASK_APP="medical_record_chain.py"
-ENV APP_SETTINGS="development"
-ENV SECRET="dev_secret"
-ENV DATABASE_URL="postgresql://quincy:Quincy1000@host.docker.internal:5432/medical_record_db"
+FROM alpine:latest
 
 # update python and c++ compiler
 RUN apk add --update python3 py3-pip
-RUN apk add --update gcc
 
 # Install dependencies
 # Install app dependencies
@@ -40,5 +33,11 @@ COPY ./instance /usr/src/app/instance
 
 WORKDIR /usr/src/app
 EXPOSE 5000
+
+## wait until DB starts up
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
+RUN chmod +x /wait
+
 #CMD ["flask", "./medical_record_chain.py", "-p 5000"]
+CMD /wait
 CMD ["python3", "./medical_record_chain.py", "-p 5000"]

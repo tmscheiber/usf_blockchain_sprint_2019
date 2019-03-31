@@ -33,7 +33,7 @@ from Crypto import Random
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA3_256
 from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from Crypto.Signature import pkcs1_15
 
 import requests
 from flask import Flask, jsonify, request, render_template
@@ -99,19 +99,25 @@ class MedicalRecord:
         return self.data[attr]
 
     def to_dict(self):
-        return OrderedDict({'transaction_type':'medical_record',
+        dict = OrderedDict({'transaction_type':'medical_record',
                             'patient_address': self.patient_address,
                             'provider_address': self.provider_address,
                             'provider_public_key': self.provider_public_key,
                             'document_reference': self.document_reference})
+        return dict
 
     def sign_medical_record_creation(self):
         """
         Sign transaction with private key
         """
         private_key = RSA.importKey(unhexlify(self.provider_private_key))
-        signer = PKCS1_v1_5.new(private_key)
+        signer = pkcs1_15.new(private_key)
         h = SHA3_256.new(str(self.to_dict()).encode('utf8'))
+        f=open('./testit.txt', 'w')
+        f.write("this is a private key {}\n".format(self.provider_private_key))
+        f.write("this is a hash {}\n".format(h.hexdigest()))
+        f.write("this is the signature {}\n".format(hexlify(signer.sign(h)).decode('ascii')))
+        f.close()
 
         return hexlify(signer.sign(h)).decode('ascii')
 

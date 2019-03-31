@@ -31,11 +31,13 @@ services:
             FLASK_APP: medical_record_chain.py
             APP_SETTINGS: development
             SECRET: dev_secret
-            DATABASE_URL: postgresql://quincy:Quincy1000@host.docker.internal:5432/medical_record_db"
+            DATABASE_URL: postgresql+psycopg2://quincy:Quincy1000@host.docker.internal:5432/medical_record_db
+            WAIT_HOSTS: db:5432
         depends_on:
             - db
+        restart: on-failure
         ports:
-            - "5000:5000"
+            - 5000:5000
         networks:
             - default
 
